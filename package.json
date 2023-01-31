@@ -1,0 +1,19 @@
+{
+  "name": "m4-sp2-movies-alexandra86",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Kenzie-Academy-Brasil-Developers/m4-sp2-movies-alexandra86.git",
+  "author": "Alexandra Miranda <alexyamiranda7@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "ts-node-dev --cls --rs --ignore-watch node_modules src/app.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.16",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.5"
+  }
+}
