@@ -6,6 +6,7 @@ import {
   listAllMovies,
   rescueMovies,
   updatesAllMovieData,
+  updatesPartialMovieData,
 } from "./functions";
 import { ensureMoviesExists } from "./middlewares";
 
@@ -19,6 +20,8 @@ app.get("/movies", listAllMovies);
 app.get("/movies/:id", ensureMoviesExists, rescueMovies);
 
 app.put("/movies/:id", ensureMoviesExists, updatesAllMovieData);
+
+app.patch("/movies/:id", ensureMoviesExists, updatesPartialMovieData);
 
 app.delete("/movies/:id", ensureMoviesExists, deleteMovies);
 

@@ -48,15 +48,15 @@ export const createMovies = async (
       Object.values(movieData)
     );
 
+    // if (request.body.name) {
+    //   return response.status(409).json({
+    //     message: "Error: This movie already exists, please try again.",
+    //   });
+    // }
+
     const queryResult: moviesResult = await client.query(queryString);
 
     const newMovieData: Imovies = queryResult.rows[0];
-
-    // if (newMovieData.id) {
-    //   return response.status(409).json({
-    //     message: "Movie already exists.",
-    //   });
-    // }
 
     return response.status(201).json(newMovieData);
   } catch (error) {
@@ -170,6 +170,43 @@ export const updatesAllMovieData = async (
   const queryConfig: QueryConfig = {
     text: queryString,
     values: [...movieData, id],
+  };
+
+  const queryResult: moviesResult = await client.query(queryConfig);
+
+  return response.json(queryResult.rows[0]);
+};
+
+export const updatesPartialMovieData = async (
+  request: Request,
+  response: Response
+): Promise<Response> => {
+  if (request.body.id) {
+    return response.status(400).json({
+      message: "Error: id cannot be changed.",
+    });
+  }
+
+  const id: number = parseInt(request.params.id);
+  const movieData = Object.values(request.body);
+  const movieKeys = Object.keys(request.body);
+
+  const formatString: string = format(
+    `
+      UPDATE
+        movies
+        SET(%I) = ROW(%L)
+      WHERE
+        id = $1
+      RETURNING *;
+  `,
+    movieKeys,
+    movieData
+  );
+
+  const queryConfig: QueryConfig = {
+    text: formatString,
+    values: [id],
   };
 
   const queryResult: moviesResult = await client.query(queryConfig);
