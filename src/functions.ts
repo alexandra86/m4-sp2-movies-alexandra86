@@ -7,6 +7,7 @@ import {
   IMoviesRequest,
   moviesCreate,
   moviesResult,
+  Pagination,
 } from "./interfaces";
 
 const validateDataMovies = (payload: any): IMoviesRequest => {
@@ -19,8 +20,8 @@ const validateDataMovies = (payload: any): IMoviesRequest => {
   if (typeof payload.price !== "number") {
     throw new Error("The movie price need to be a number");
   }
-  if (typeof payload.description !== "string" || null) {
-    throw new Error("The movie description need to be a string");
+  if (typeof payload.description === "number") {
+    throw new Error("The movie description need to be a string or null");
   }
 
   return payload;
@@ -48,12 +49,6 @@ export const createMovies = async (
       Object.values(movieData)
     );
 
-    // if (request.body.name) {
-    //   return response.status(409).json({
-    //     message: "Error: This movie already exists, please try again.",
-    //   });
-    // }
-
     const queryResult: moviesResult = await client.query(queryString);
 
     const newMovieData: Imovies = queryResult.rows[0];
@@ -79,49 +74,112 @@ export const listAllMovies = async (
   const perPage: any =
     request.query.perPage === undefined ? 5 : request.query.perPage;
   let page: any = request.query.page === undefined ? 1 : request.query.page;
+  if (page <= 0) {
+    return response.status(400).json({
+      message: "Movie search starts on page 1",
+    });
+  }
+  page = (page - 1) * perPage;
 
-  page = page * perPage;
+  const sort: any = request.query.sort;
+  const order: any = request.query.order;
+
+  if (order && !sort) {
+    if (order == "DESC" || order == "ASC") {
+      const queryString: string = `
+  SELECT
+      *
+  FROM
+      movies
+  ORDER BY id 
+  LIMIT $1 OFFSET $2;
+`;
+      const queryConfig: QueryConfig = {
+        text: queryString,
+        values: [perPage, page],
+      };
+
+      const baseUrl: string = `http://localhost:3000/movies`;
+      const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
+      const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
+
+      const queryResult: moviesResult = await client.query(queryConfig);
+
+      const pagination: Pagination = {
+        prevPage,
+        nextPage,
+        data: queryResult.rows,
+      };
+
+      return response.status(200).json(pagination);
+    } else {
+      return response.status(404).json({
+        message: `${order} not found`,
+      });
+    }
+  }
+
+  if (sort && !order) {
+    if (sort == "price" || sort == "duration") {
+      const queryString: string = `
+      SELECT
+          *
+      FROM
+          movies
+      ORDER BY ${sort} ASC
+      LIMIT $1 OFFSET $2;
+    `;
+      const queryConfig: QueryConfig = {
+        text: queryString,
+        values: [perPage, page],
+      };
+
+      const baseUrl: string = `http://localhost:3000/movies`;
+      const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
+      const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
+
+      const queryResult: moviesResult = await client.query(queryConfig);
+
+      const pagination: Pagination = {
+        prevPage,
+        nextPage,
+        data: queryResult.rows,
+      };
+
+      return response.status(200).json(pagination);
+    } else {
+      return response.status(404).json({
+        message: `${sort} not found`,
+      });
+    }
+  }
 
   const queryString: string = `
-        SELECT
-            *
-        FROM
-            movies
-        LIMIT $1 OFFSET $2;
-    `;
-
+  SELECT
+      *
+  FROM
+      movies
+  ORDER BY ${sort} ${order}
+  LIMIT $1 OFFSET $2;
+`;
   const queryConfig: QueryConfig = {
     text: queryString,
     values: [perPage, page],
   };
 
+  const baseUrl: string = `http://localhost:3000/movies`;
+  const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
+  const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
+
   const queryResult: moviesResult = await client.query(queryConfig);
 
-  return response.status(200).json(queryResult.rows);
-};
-
-export const rescueMovies = async (
-  request: Request,
-  response: Response
-): Promise<Response> => {
-  const id: number = parseInt(request.params.id);
-  const queryString: string = `
-    SELECT
-        *
-    FROM
-        movies
-    WHERE
-        id = $1;
-`;
-
-  const queryConfig: QueryConfig = {
-    text: queryString,
-    values: [id],
+  const pagination: Pagination = {
+    prevPage,
+    nextPage,
+    data: queryResult.rows,
   };
 
-  const queryResult: moviesResult = await client.query(queryConfig);
-
-  return response.json(queryResult.rows[0]);
+  return response.status(200).json(pagination);
 };
 
 export const deleteMovies = async (

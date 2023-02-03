@@ -4,7 +4,6 @@ import {
   createMovies,
   deleteMovies,
   listAllMovies,
-  rescueMovies,
   updatesAllMovieData,
   updatesPartialMovieData,
 } from "./functions";
@@ -16,8 +15,6 @@ app.use(express.json());
 app.post("/movies", createMovies);
 
 app.get("/movies", listAllMovies);
-
-app.get("/movies/:id", ensureMoviesExists, rescueMovies);
 
 app.put("/movies/:id", ensureMoviesExists, updatesAllMovieData);
 
