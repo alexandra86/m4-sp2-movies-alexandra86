@@ -71,20 +71,21 @@ export const listAllMovies = async (
   request: Request,
   response: Response
 ): Promise<Response> => {
-  const perPage: any =
-    request.query.perPage === undefined ? 5 : request.query.perPage;
-  let page: any = Number(request.query.page) > 0 ? request.query.page : 1;
+  try {
+    const perPage: any =
+      request.query.perPage === undefined ? 5 : request.query.perPage;
+    let page: any = Number(request.query.page) > 0 ? request.query.page : 1;
 
-  const prevPage = +page - 1;
-  const nextPage = +page + 1;
-  page = (page - 1) * perPage;
+    const prevPage = +page - 1;
+    const nextPage = +page + 1;
+    page = (page - 1) * perPage;
 
-  const sort: any = request.query.sort;
-  const order: any = request.query.order;
+    const sort: any = request.query.sort;
+    const order: any = request.query.order;
 
-  if (order && !sort) {
-    if (order == "DESC" || order == "ASC") {
-      const queryString: string = `
+    if (order && !sort) {
+      if (order == "DESC" || order == "ASC") {
+        const queryString: string = `
   SELECT
       *
   FROM
@@ -92,42 +93,42 @@ export const listAllMovies = async (
   ORDER BY id 
   LIMIT $1 OFFSET $2;
 `;
-      const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [perPage, page],
-      };
-      const queryResult: moviesResult = await client.query(queryConfig);
+        const queryConfig: QueryConfig = {
+          text: queryString,
+          values: [perPage, page],
+        };
+        const queryResult: moviesResult = await client.query(queryConfig);
 
-      const pagination: IPagination = {
-        prevPage:
-          prevPage === 0
-            ? null
-            : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
-        nextPage:
-          queryResult.rowCount === 0
-            ? null
-            : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
-        count: Number(queryResult.rowCount),
-        data: queryResult.rows,
-      };
+        const pagination: IPagination = {
+          prevPage:
+            prevPage === 0
+              ? null
+              : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+          nextPage:
+            queryResult.rowCount === 0
+              ? null
+              : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+          count: Number(queryResult.rowCount),
+          data: queryResult.rows,
+        };
 
-      if (!queryResult.rows[0]) {
+        if (!queryResult.rows[0]) {
+          return response.status(404).json({
+            message: "Movies page not found!",
+          });
+        }
+
+        return response.status(200).json(pagination);
+      } else {
         return response.status(404).json({
-          message: "Movies page not found!",
+          message: `${order} not found`,
         });
       }
-
-      return response.status(200).json(pagination);
-    } else {
-      return response.status(404).json({
-        message: `${order} not found`,
-      });
     }
-  }
 
-  if (sort && !order) {
-    if (sort == "price" || sort == "duration") {
-      const queryString: string = `
+    if (sort && !order) {
+      if (sort == "price" || sort == "duration") {
+        const queryString: string = `
       SELECT
           *
       FROM
@@ -135,40 +136,40 @@ export const listAllMovies = async (
       ORDER BY ${sort} ASC
       LIMIT $1 OFFSET $2;
     `;
-      const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [perPage, page],
-      };
-      const queryResult: moviesResult = await client.query(queryConfig);
+        const queryConfig: QueryConfig = {
+          text: queryString,
+          values: [perPage, page],
+        };
+        const queryResult: moviesResult = await client.query(queryConfig);
 
-      const pagination: IPagination = {
-        prevPage:
-          prevPage === 0
-            ? null
-            : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
-        nextPage:
-          queryResult.rowCount === 0
-            ? null
-            : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
-        count: Number(queryResult.rowCount),
-        data: queryResult.rows,
-      };
+        const pagination: IPagination = {
+          prevPage:
+            prevPage === 0
+              ? null
+              : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+          nextPage:
+            queryResult.rowCount === 0
+              ? null
+              : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+          count: Number(queryResult.rowCount),
+          data: queryResult.rows,
+        };
 
-      if (!queryResult.rows[0]) {
+        if (!queryResult.rows[0]) {
+          return response.status(404).json({
+            message: "Movies page not found!",
+          });
+        }
+
+        return response.status(200).json(pagination);
+      } else {
         return response.status(404).json({
-          message: "Movies page not found!",
+          message: `${sort} not found`,
         });
       }
-
-      return response.status(200).json(pagination);
-    } else {
-      return response.status(404).json({
-        message: `${sort} not found`,
-      });
     }
-  }
 
-  const queryString: string = `
+    const queryString: string = `
   SELECT
       *
   FROM
@@ -176,32 +177,43 @@ export const listAllMovies = async (
   ORDER BY ${sort} ${order}
   LIMIT $1 OFFSET $2;
 `;
-  const queryConfig: QueryConfig = {
-    text: queryString,
-    values: [perPage, page],
-  };
-  const queryResult: moviesResult = await client.query(queryConfig);
+    const queryConfig: QueryConfig = {
+      text: queryString,
+      values: [perPage, page],
+    };
+    const queryResult: moviesResult = await client.query(queryConfig);
 
-  const pagination: IPagination = {
-    prevPage:
-      prevPage === 0
-        ? null
-        : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
-    nextPage:
-      queryResult.rowCount === 0
-        ? null
-        : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
-    count: Number(queryResult.rowCount),
-    data: queryResult.rows,
-  };
+    const pagination: IPagination = {
+      prevPage:
+        prevPage === 0
+          ? null
+          : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+      nextPage:
+        queryResult.rowCount === 0
+          ? null
+          : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+      count: Number(queryResult.rowCount),
+      data: queryResult.rows,
+    };
 
-  if (!queryResult.rows[0]) {
-    return response.status(404).json({
-      message: "Movies page not found!",
+    if (!queryResult.rows[0]) {
+      return response.status(404).json({
+        message: "Movies page not found!",
+      });
+    }
+
+    return response.status(200).json(pagination);
+  } catch (error) {
+    if (error instanceof Error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+    console.log(error);
+    return response.status(500).json({
+      message: "Internal server error",
     });
   }
-
-  return response.status(200).json(pagination);
 };
 
 export const deleteMovies = async (
