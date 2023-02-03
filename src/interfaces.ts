@@ -11,9 +11,10 @@ export interface Imovies extends IMoviesRequest {
   id: number;
 }
 
-export interface Pagination {
-  prevPage: string;
-  nextPage: string;
+export interface IPagination {
+  prevPage: string | null;
+  nextPage: string | null;
+  count: number;
   data: Imovies[];
 }
 

@@ -5,9 +5,9 @@ import { client } from "./database";
 import {
   Imovies,
   IMoviesRequest,
+  IPagination,
   moviesCreate,
   moviesResult,
-  Pagination,
 } from "./interfaces";
 
 const validateDataMovies = (payload: any): IMoviesRequest => {
@@ -73,12 +73,10 @@ export const listAllMovies = async (
 ): Promise<Response> => {
   const perPage: any =
     request.query.perPage === undefined ? 5 : request.query.perPage;
-  let page: any = request.query.page === undefined ? 1 : request.query.page;
-  if (page <= 0) {
-    return response.status(400).json({
-      message: "Movie search starts on page 1",
-    });
-  }
+  let page: any = Number(request.query.page) > 0 ? request.query.page : 1;
+
+  const prevPage = +page - 1;
+  const nextPage = +page + 1;
   page = (page - 1) * perPage;
 
   const sort: any = request.query.sort;
@@ -98,18 +96,26 @@ export const listAllMovies = async (
         text: queryString,
         values: [perPage, page],
       };
-
-      const baseUrl: string = `http://localhost:3000/movies`;
-      const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
-      const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
-
       const queryResult: moviesResult = await client.query(queryConfig);
 
-      const pagination: Pagination = {
-        prevPage,
-        nextPage,
+      const pagination: IPagination = {
+        prevPage:
+          prevPage === 0
+            ? null
+            : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+        nextPage:
+          queryResult.rowCount === 0
+            ? null
+            : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+        count: Number(queryResult.rowCount),
         data: queryResult.rows,
       };
+
+      if (!queryResult.rows[0]) {
+        return response.status(404).json({
+          message: "Movies page not found!",
+        });
+      }
 
       return response.status(200).json(pagination);
     } else {
@@ -133,18 +139,26 @@ export const listAllMovies = async (
         text: queryString,
         values: [perPage, page],
       };
-
-      const baseUrl: string = `http://localhost:3000/movies`;
-      const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
-      const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
-
       const queryResult: moviesResult = await client.query(queryConfig);
 
-      const pagination: Pagination = {
-        prevPage,
-        nextPage,
+      const pagination: IPagination = {
+        prevPage:
+          prevPage === 0
+            ? null
+            : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+        nextPage:
+          queryResult.rowCount === 0
+            ? null
+            : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+        count: Number(queryResult.rowCount),
         data: queryResult.rows,
       };
+
+      if (!queryResult.rows[0]) {
+        return response.status(404).json({
+          message: "Movies page not found!",
+        });
+      }
 
       return response.status(200).json(pagination);
     } else {
@@ -166,18 +180,26 @@ export const listAllMovies = async (
     text: queryString,
     values: [perPage, page],
   };
-
-  const baseUrl: string = `http://localhost:3000/movies`;
-  const prevPage: string = `${baseUrl}?page=${page - 1}&perPage=${perPage}`;
-  const nextPage: string = `${baseUrl}?page=${page + 1}&perPage=${perPage}`;
-
   const queryResult: moviesResult = await client.query(queryConfig);
 
-  const pagination: Pagination = {
-    prevPage,
-    nextPage,
+  const pagination: IPagination = {
+    prevPage:
+      prevPage === 0
+        ? null
+        : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+    nextPage:
+      queryResult.rowCount === 0
+        ? null
+        : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+    count: Number(queryResult.rowCount),
     data: queryResult.rows,
   };
+
+  if (!queryResult.rows[0]) {
+    return response.status(404).json({
+      message: "Movies page not found!",
+    });
+  }
 
   return response.status(200).json(pagination);
 };
@@ -239,35 +261,47 @@ export const updatesPartialMovieData = async (
   request: Request,
   response: Response
 ): Promise<Response> => {
-  if (request.body.id) {
-    return response.status(400).json({
-      message: "Error: id cannot be changed.",
+  try {
+    if (request.body.id) {
+      return response.status(400).json({
+        message: "Error: id cannot be changed.",
+      });
+    }
+
+    const id: number = parseInt(request.params.id);
+    const movieData = Object.values(request.body);
+    const movieKeys = Object.keys(request.body);
+
+    const formatString: string = format(
+      `
+        UPDATE
+          movies
+          SET(%I) = ROW(%L)
+        WHERE
+          id = $1
+        RETURNING *;
+    `,
+      movieKeys,
+      movieData
+    );
+
+    const queryConfig: QueryConfig = {
+      text: formatString,
+      values: [id],
+    };
+
+    const queryResult: moviesResult = await client.query(queryConfig);
+
+    return response.json(queryResult.rows[0]);
+  } catch (error) {
+    if (error instanceof Error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+    console.log(error);
+    return response.status(500).json({
+      message: "Internal server error",
     });
   }
-
-  const id: number = parseInt(request.params.id);
-  const movieData = Object.values(request.body);
-  const movieKeys = Object.keys(request.body);
-
-  const formatString: string = format(
-    `
-      UPDATE
-        movies
-        SET(%I) = ROW(%L)
-      WHERE
-        id = $1
-      RETURNING *;
-  `,
-    movieKeys,
-    movieData
-  );
-
-  const queryConfig: QueryConfig = {
-    text: formatString,
-    values: [id],
-  };
-
-  const queryResult: moviesResult = await client.query(queryConfig);
-
-  return response.json(queryResult.rows[0]);
 };
