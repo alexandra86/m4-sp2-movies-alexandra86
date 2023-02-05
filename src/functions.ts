@@ -244,7 +244,7 @@ export const updatesAllMovieData = async (
   response: Response
 ): Promise<Response> => {
   const id: number = parseInt(request.params.id);
-  const movieData = Object.values(request.body);
+  const movieData = Object.values(validateDataMovies(request.body));
 
   const queryString: string = `
         UPDATE
@@ -281,7 +281,7 @@ export const updatesPartialMovieData = async (
     }
 
     const id: number = parseInt(request.params.id);
-    const movieData = Object.values(request.body);
+    const movieData = Object.values(validateDataMovies(request.body));
     const movieKeys = Object.keys(request.body);
 
     const formatString: string = format(
