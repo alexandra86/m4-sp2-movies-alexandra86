@@ -241,36 +241,6 @@ export const deleteMovies = async (
   return response.status(204).send();
 };
 
-export const updatesAllMovieData = async (
-  request: Request,
-  response: Response
-): Promise<Response> => {
-  const id: number = parseInt(request.params.id);
-  const movieData = Object.values(request.body);
-
-  const queryString: string = `
-        UPDATE
-            movies
-        SET
-            name = $1,
-            description = $2,
-            duration = $3,
-            price = $4
-        WHERE
-            id = $5
-        RETURNING *;
-    `;
-
-  const queryConfig: QueryConfig = {
-    text: queryString,
-    values: [...movieData, id],
-  };
-
-  const queryResult: moviesResult = await client.query(queryConfig);
-
-  return response.json(queryResult.rows[0]);
-};
-
 export const updatesPartialMovieData = async (
   request: Request,
   response: Response
