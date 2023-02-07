@@ -54,12 +54,20 @@ export const createMovies = async (
     const newMovieData: Imovies = queryResult.rows[0];
 
     return response.status(201).json(newMovieData);
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error.message.includes("duplicate key value violates unique constraint")
+    ) {
+      return response.status(409).json({
+        message: "Movie already exists!",
+      });
+    }
     if (error instanceof Error) {
       return response.status(400).json({
         message: error.message,
       });
     }
+
     console.log(error);
     return response.status(500).json({
       message: "Internal server error",
@@ -83,9 +91,8 @@ export const listAllMovies = async (
     const sort: any = request.query.sort;
     const order: any = request.query.order;
 
-    if (order && !sort) {
-      if (order == "DESC" || order == "ASC") {
-        const queryString: string = `
+    if (!sort) {
+      const queryString: string = `
   SELECT
       *
   FROM
@@ -93,37 +100,32 @@ export const listAllMovies = async (
   ORDER BY id 
   LIMIT $1 OFFSET $2;
 `;
-        const queryConfig: QueryConfig = {
-          text: queryString,
-          values: [perPage, page],
-        };
-        const queryResult: moviesResult = await client.query(queryConfig);
+      const queryConfig: QueryConfig = {
+        text: queryString,
+        values: [perPage, page],
+      };
+      const queryResult: moviesResult = await client.query(queryConfig);
 
-        const pagination: IPagination = {
-          prevPage:
-            prevPage === 0
-              ? null
-              : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
-          nextPage:
-            queryResult.rowCount === 0
-              ? null
-              : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
-          count: Number(queryResult.rowCount),
-          data: queryResult.rows,
-        };
+      const pagination: IPagination = {
+        prevPage:
+          prevPage === 0
+            ? null
+            : `http://localhost:3000/movies?page=${prevPage}&perPage=5`,
+        nextPage:
+          queryResult.rowCount === 0
+            ? null
+            : `http://localhost:3000/movies?page=${nextPage}&perPage=5`,
+        count: Number(queryResult.rowCount),
+        data: queryResult.rows,
+      };
 
-        if (!queryResult.rows[0]) {
-          return response.status(404).json({
-            message: "Movies page not found!",
-          });
-        }
-
-        return response.status(200).json(pagination);
-      } else {
+      if (!queryResult.rows[0]) {
         return response.status(404).json({
-          message: `${order} not found`,
+          message: "Movies page not found!",
         });
       }
+
+      return response.status(200).json(pagination);
     }
 
     if (sort && !order) {
@@ -244,7 +246,7 @@ export const updatesAllMovieData = async (
   response: Response
 ): Promise<Response> => {
   const id: number = parseInt(request.params.id);
-  const movieData = Object.values(validateDataMovies(request.body));
+  const movieData = Object.values(request.body);
 
   const queryString: string = `
         UPDATE
@@ -281,7 +283,7 @@ export const updatesPartialMovieData = async (
     }
 
     const id: number = parseInt(request.params.id);
-    const movieData = Object.values(validateDataMovies(request.body));
+    const movieData = Object.values(request.body);
     const movieKeys = Object.keys(request.body);
 
     const formatString: string = format(
