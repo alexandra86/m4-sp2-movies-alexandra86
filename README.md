@@ -1,3 +1,19 @@
+# 🏁 Projeto Movies
+
+<h2 font-family="pattaya">Tecnologias utilizadas</h2>
+<div style="display: inline_block"><br>
+ <img align="center" alt="Alexandra-Node" height="30" width="40" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg">
+ <img align="center" alt="Alexandra-Ts" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-plain.svg">
+ <img align="center" alt="Alexandra-SQL" height="30" width="40" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg"> 
+</div><br>
+
+<h2 font-family="pattaya">Descrição</h2><br>
+<p font-family="robotto" font-size="16px" line-height="34px" align="justify">
+A API, se refere à uma aplicação de fimes, simulando a rotina de uma locadora.
+</p><br>
+
+<h2 font-family="pattaya">Requisitos técnicos:</h2><br>
+
 # Endpoints do serviço
 
 | Método | Endpoint | Responsabilidade |
