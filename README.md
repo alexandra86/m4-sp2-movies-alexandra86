@@ -23,6 +23,7 @@ Projeto do módulo 4, do curso de Desenvolvedora Web Full Stack, da Kenzie Acade
 | PATCH | /movies/&lt;id&gt; | Atualiza os dados de um filme de forma dinâmica |
 | DELETE | /movies/&lt;id&gt; | Deleta um filme |
 
+
 ## **Tabela**
 
 A tabela deve seguir as seguintes especificações:
@@ -34,6 +35,11 @@ A tabela deve seguir as seguintes especificações:
   * **description**: texto.
   * **duration**: inteiro e chave obrigatória.
   * **price**: inteiro e chave obrigatória.
+
+
+## Diagrama DER da API.
+
+![DER](/movies_diagrams.png)
 
 ## Requisitos do Serviço
 
