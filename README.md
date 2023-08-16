@@ -9,7 +9,7 @@
 
 <h2 font-family="pattaya">Descrição</h2><br>
 <p font-family="robotto" font-size="16px" line-height="34px" align="justify">
-A API, se refere à uma aplicação de fimes, simulando a rotina de uma locadora.
+Projeto do módulo 4, do curso de Desenvolvedora Web Full Stack, da Kenzie Academy Brasil. A API, se refere à uma aplicação de fimes, simulando a rotina de uma locadora.
 </p><br>
 
 <h2 font-family="pattaya">Requisitos técnicos:</h2><br>
